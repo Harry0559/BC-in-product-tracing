@@ -2,8 +2,6 @@
 
 pragma solidity ^0.8.17;
 
-import "hardhat/console.sol";
-
 contract Tracing {
     struct Source {
         address provider; 
@@ -15,14 +13,6 @@ contract Tracing {
         string time; //the production time
         string location; //the production location
         Source[] sources; //the sources of this product
-    }
-
-    struct Trace {
-        string name;
-        string time;
-        string location;
-        uint start; //the start index of the sources in the struct array when tracing product
-        uint num; //the number of sources
     }
 
     address public creator; //the creator of this contract
@@ -51,7 +41,6 @@ contract Tracing {
 
     constructor() {
         creator = msg.sender;
-        console.log(block.chainid);
     }
 
     function authorize(address provider) external onlyCreator {
@@ -102,12 +91,11 @@ contract Tracing {
     function traceProduct(
         address provider,
         uint256 id
-    ) public view returns(Trace[] memory) {
+    ) public view returns(Product memory product) {
         if(!authority[provider]) revert ProviderNotAuthorized(provider);
         if(bytes(products[provider][id].name).length == 0) revert IdNotExist(provider, id);
-        Trace[] memory trace = constructTracingArray(provider, id);
 
-        return trace;
+        product = products[provider][id];
     }
 
     function isValidSignature(
@@ -147,45 +135,5 @@ contract Tracing {
         }
 
         return (v, r, s);
-    }
-
-    function productNum(address provider, uint256 id)
-        internal
-        view
-        returns (uint num)
-    {
-        num = 1;
-        Product storage product = products[provider][id];
-        for (uint i = 0; i < product.sources.length; i++) {
-            Source storage source = product.sources[i];
-            num = num + productNum(source.provider,source.id);
-        }
-    }
-
-    function constructTracingArray(address provider, uint256 id)
-        internal
-        view
-        returns (Trace[] memory)
-    {
-        uint len = productNum(provider,id);
-        Trace[] memory trace = new Trace[](len);
-        Product[] memory record = new Product[](len);
-        record[0] = products[provider][id];
-        (trace[0].name,trace[0].time,trace[0].location) = (record[0].name,record[0].time,record[0].location);
-        uint left = 0;
-        uint right = 1;
-        for (;left < len; left++) {
-            if (right < len) trace[left].start = right;
-            else trace[left].start = uint(0);
-            Source[] memory sources = record[left].sources;
-            trace[left].num = sources.length;
-            for (uint i = 0; i < sources.length; i++) {
-                record[right+i] = products[sources[i].provider][sources[i].id];
-                (trace[right+i].name,trace[right+i].time,trace[right+i].location) 
-                    = (record[right+i].name,record[right+i].time,record[right+i].location);
-            }
-            right = right + sources.length;
-        }
-        return trace;
     }
 }

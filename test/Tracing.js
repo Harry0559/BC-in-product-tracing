@@ -263,38 +263,18 @@ describe("Tracing contract", function() {
             ))
                 .to.emit(Tracing,"ProductAdded")
                 .withArgs(add2.address, 4);
-            
-            const information = 
-            [
-                [
-                    'name4',
-                    'time4',
-                    'location4',
-                    1,
+            const information = [
+                "name4",
+                "time4",
+                "location4",
+                [[
+                    wallet2.address,
                     2
-                ],
-                [
-                    'name2',
-                    'time2',
-                    'location2',
-                    3,
-                    1
-                ],
-                [
-                    'name3',
-                    'time3',
-                    'location3',
-                    0,
-                    0
-                ],
-                [
-                    'name1',
-                    'time1',
-                    'location1',
-                    0,
-                    0
-                ]
-            ];
+                ],[
+                    wallet3.address,
+                    3
+                ]]
+            ]
 
             expect(await Tracing.traceProduct(add2.address,4)).to.deep.equal(information);
         });
@@ -316,5 +296,3 @@ async function transferETH(_from, _to, _eth) {
     const receipt = await _from.sendTransaction(tx);
     await receipt.wait();
 }
-
-
